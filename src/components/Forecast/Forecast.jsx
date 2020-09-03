@@ -6,17 +6,36 @@ import classes from './Forecast.module.css'
 
 const Forecast = () => {
   let [city, setCity] = useState('')
-  let [unit, setUnit] = useState('imperial')
+  let [unit, setUnit] = useState('metric')
   let[responseObj, setResponseObj] = useState({})
-  function getForecast(e) {
-    e.preventDefault()
-    fetch(`http://api.openweathermap.org/data/2.5/weather?q=${city}&units=${unit}&APPID=${API_KEY}`)
-    .then((response) => response.json())
-    .then((data) => {
-      setResponseObj(data);
+  let [error, setError] = useState(false);
+  let [loading, setLoading] = useState(false);
 
-      console.log(data)})
-    .catch(err => console.log(err))
+  function getForecast(e) {
+
+    e.preventDefault()
+    if (city.length === 0) {
+      return setError(true);
+  }
+    setError(false);
+    setResponseObj({});
+    
+    setLoading(true);
+    fetch(`http://api.openweathermap.org/data/2.5/weather?q=${city}&units=${unit}&APPID=${API_KEY}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.cod !== 200) {
+      throw new Error()
+  }
+      setResponseObj(data);
+      setLoading(false)
+      })
+   
+      .catch(err => {
+      setError(true)
+      setLoading(false)
+      console.log(err.message)
+    });
 
   }
 return(
@@ -60,7 +79,11 @@ return(
 
     <button className={classes.Button} type="submit">Get Forecast</button>
     </form>
-    <Condition responseObj={responseObj}/>
+    <Condition responseObj={responseObj}
+    error={error}
+    loading={loading}
+    
+    />
   </div>
 )
 }
